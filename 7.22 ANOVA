@@ -1,0 +1,477 @@
+#### 분산 분석 ####
+# 연속변수 (아니라면kruskal -wallis H test
+# 정규분포 (아니라면 kruskal -wallis Htest)
+# 등분산 ( 아니라면 welch's anova
+# anova사용
+# 사후 검정 : tukey
+
+# 정규성 : 각 그룹의 변수는 정규분포를 따라야한다.
+# 등분산성 : 그룹간 분산 값은 서로 같아야한다.
+# 독립성 : 그룹간 변수의 값은 서로 독립적이어서 서로에 대한
+#영향력을 갖지 않아야한다.
+# 귀무가설 H0 : u1 = u2 = u3 ...=Ur
+# 대립가설 H1 : 모든 Ui는 갖지 않다. 
+# P-value 가 0.05 보다 작으면 H0를 기각 대립채택 (집단간에 달라)
+# p-value 가 0.05보다 크면 귀무채택 (잡단간에 다같아)
+
+#### 정규성 검정 shapiro.test ####
+# 귀무가설 : 정규분포 따른다.
+# 대립가설 : 정규분포 따르지 안흔ㄴ다.
+# p value 보고 0.05보다 작으면 기각하므로 정규분포 안따른다.
+# p value 보고 0.05보다 크면 기각할수없으므로 정규분포 따른다.
+#------------------------------------------
+# one way anova
+library(moonBook)
+View(acs)
+#LDLC (저밀도 콜레스테롤 수치)
+# Dx(진단 결과) : STEMI, NSTEMI, unstable angina
+
+moonBook::densityplot(LDLC ~ Dx, data = acs)
+#정규분포 테스트 일일이 테스트과정 a,b,c집단의 정규분포 확인
+with(acs, shapiro.test(LDLC[Dx=="NSTEMI"]))
+with(acs, shapiro.test(LDLC[Dx=="STEMI"]))
+with(acs, shapiro.test(LDLC[Dx=="Unstable Angina"]))
+# aov() 함수를 통해 정규분포를 테스트한다.
+out = aov(LDLC ~ Dx, data = acs)
+# resid 잔차 구해주는 
+shapiro.test(resid(out))
+
+#등분산 검정 (정규분포를 따르지않지만 그냥확인)
+
+bartlett.test(LDLC ~ Dx, data =acs)
+#### 등분산검정 ####
+#등분산성(Homegeneity of Variance)란 그룹 간 분산이 같다는 것을 의미합니다.
+
+# 정규분포이고 등분산일 경우
+out = aov(LDLC ~ Dx, data= acs)
+summary(out)
+#### 모수일떄 one-way anova , 비모수일때 kruska-####
+# 연속변수가 아니거나 정규분포가 아닐경우
+kruskal.test(LDLC ~ Dx, data = acs)
+# 저밀도 콜레스테롤 수치가 차이가 있다. 
+
+# 등분산이 아닐 경우 (var.equla = F 로 등분산아닐경우)
+oneway.test(LDLC ~ Dx, data = acs, var.equal = F)
+
+#### 사후 검정 ####
+# aov()를 사용했을경우 :  tukeyHSD()
+# pvalue 0.05 보다 작을경우 두집단간에 차이가 있다.
+TukeyHSD(out)
+
+# kruskal.test() 를 사용했을 경우
+install.packages("pgirmess")
+library(pgirmess)
+# acs데이터의 LDLC 수치, acs의 Dx 종류들
+# 사후검정 함수 : 알고자하는 수치, 집단종류
+kruskalmc(acs$LDLC, acs$Dx)
+
+str(InsectSprays)
+View(InsectSprays)
+
+moonBook::densityplot(count~sprary, data=InsectSprays)
+kruskalmc(InsectSprays$count, InsectSprays$spray)
+
+install.packages("userfriendlyscience")
+library(userfriendlyscience)
+#정규이고 등분산 아닐떄는 사후검정 posthocTGH
+posthocTGH(x=InsectSprays$spray, y=InsectSprays$count,
+           method = "games-howell")
+
+# oneway.test() 를 사용했을때 사후검정
+install.packages("nparcomp")
+library(nparcomp)
+
+result <- mctp(LDLC ~ Dx, data=acs)
+summary(result)
+
+#--------------------------
+head(iris)
+#품종별로 sepal.width 의 평균 차이가 있는가? 만약 있다면 어느품종과 차이가있는가
+
+View(iris)
+#정규분포
+out = aov(Sepal.Width ~ Species, data = iris)
+#잔차로 정규분포 확인
+shapiro.test(resid(out))
+#정규분포맞다
+bartlett.test(Sepal.Width ~ Species, data = iris)
+#등분산 맞다
+#확인
+out = aov(Sepal.Width ~ Species, data = iris)
+summary(out)
+#차이가 있다.
+TukeyHSD(out)
+
+#-----------------------------------
+
+mydata <- read.csv("../data/anova_one_way.csv")
+View(mydata)
+
+# 시, 군, 구에 따라서 합계 출산율의 차이가 있는가?
+# 있다면 어느것과 차이가 있는가?
+
+#정규분포
+out = aov(birth_rate ~ ad_layer , data = mydata)
+#잔차로 정규분포 확인
+shapiro.test(resid(out))
+
+bartlett.test(birth_rate ~ ad_layer , data = mydata)
+
+kruskal.test(birth_rate ~ ad_layer , data = mydata)
+# p값도 알려주는 사후방법
+posthocTGH(x=mydata$ad_layer, y= mydata$birth_rate,method='games-howell')
+# 그냥 결과만 알려주는 사후방법
+kruskalmc(mydata$birth_rate, mydata$ad_layer)
+
+#### two way anova####
+#
+mydata <- read.csv("../data/anova_two_way.csv")
+View(mydata)
+
+out =aov(birth_rate~ad_layer+multichild+ad_layer:multichild, data = mydata)
+shapiro.test(resid(out))
+# p값이 작아서 정규분포라는 귀무가설을 받쳐주지 못한다.
+# 그러무르 정규분포가 아니다.
+
+summary(out)
+# multichild는 안되는데 
+# 시군구와 다자녀가 합치면 
+
+TukeyHSD(out)
+
+#--------------------------------
+#### one way Repeated Measures Anova ####
+# 연속변수나 정규분포가 아닐경우 : friedman test
+
+RoundingTimes <-
+  matrix(c(5.40, 5.50, 5.55,
+           5.85, 5.70, 5.75,
+           5.20, 5.60, 5.50,
+           5.55, 5.50, 5.40,
+           5.90, 5.85, 5.70,
+           5.45, 5.55, 5.60,
+           5.40, 5.40, 5.35,
+           5.45, 5.50, 5.35,
+           5.25, 5.15, 5.00,
+           5.85, 5.80, 5.70,
+           5.25, 5.20, 5.10,
+           5.65, 5.55, 5.45,
+           5.60, 5.35, 5.45,
+           5.05, 5.00, 4.95,
+           5.50, 5.50, 5.40,
+           5.45, 5.55, 5.50,
+           5.55, 5.55, 5.35,
+           5.45, 5.50, 5.55,
+           5.50, 5.45, 5.25,
+           5.65, 5.60, 5.40,
+           5.70, 5.65, 5.55,
+           6.30, 6.30, 6.25),
+         nrow = 22,
+         byrow = TRUE,
+         dimnames = list(1 : 22,
+                         c("Round Out", "Narrow Angle", "Wide Angle")))
+
+
+View(RoundingTimes)
+
+# long 
+install.packages("reshape")
+rt1 <- reshape::melt(RoundingTimes)
+View(rt1)
+
+#정규분포
+out = aov(value ~ X2 , data = RoundingTimes)
+#잔차로 정규분포 확인
+shapiro.test(resid(out))
+
+####정규분포가 아닐때 쓰는 fried man test####
+
+boxplot(value ~ X2, data = rt1)
+
+friedman.test(RoundingTimes)
+
+friedman.test.with.post.hoc <- function(formu, data, to.print.friedman = T, to.post.hoc.if.signif = T,  to.plot.parallel = T, to.plot.boxplot = T, signif.P = .05, color.blocks.in.cor.plot = T, jitter.Y.in.cor.plot =F)
+{
+  # formu is a formula of the shape: 	Y ~ X | block
+  # data is a long data.frame with three columns:    [[ Y (numeric), X (factor), block (factor) ]]
+  
+  # Note: This function doesn't handle NA's! In case of NA in Y in one of the blocks, then that entire block should be removed.
+  
+  
+  # Loading needed packages
+  if(!require(coin))
+  {
+    print("You are missing the package 'coin', we will now try to install it...")
+    install.packages("coin")
+    library(coin)
+  }
+  
+  if(!require(multcomp))
+  {
+    print("You are missing the package 'multcomp', we will now try to install it...")
+    install.packages("multcomp")
+    library(multcomp)
+  }
+  
+  if(!require(colorspace))
+  {
+    print("You are missing the package 'colorspace', we will now try to install it...")
+    install.packages("colorspace")
+    library(colorspace)
+  }
+  
+  
+  # get the names out of the formula
+  formu.names <- all.vars(formu)
+  Y.name <- formu.names[1]
+  X.name <- formu.names[2]
+  block.name <- formu.names[3]
+  
+  if(dim(data)[2] >3) data <- data[,c(Y.name,X.name,block.name)]	# In case we have a "data" data frame with more then the three columns we need. This code will clean it from them...
+  
+  # Note: the function doesn't handle NA's. In case of NA in one of the block T outcomes, that entire block should be removed.
+  
+  # stopping in case there is NA in the Y vector
+  if(sum(is.na(data[,Y.name])) > 0) stop("Function stopped: This function doesn't handle NA's. In case of NA in Y in one of the blocks, then that entire block should be removed.")
+  
+  # make sure that the number of factors goes with the actual values present in the data:
+  data[,X.name ] <- factor(data[,X.name ])
+  data[,block.name ] <- factor(data[,block.name ])
+  number.of.X.levels <- length(levels(data[,X.name ]))
+  if(number.of.X.levels == 2) { warning(paste("'",X.name,"'", "has only two levels. Consider using paired wilcox.test instead of friedman test"))}
+  
+  # making the object that will hold the friedman test and the other.
+  the.sym.test <- symmetry_test(formu, data = data,	### all pairwise comparisons
+                                teststat = "max",
+                                xtrafo = function(Y.data) { trafo( Y.data, factor_trafo = function(x) { model.matrix(~ x - 1) %*% t(contrMat(table(x), "Tukey")) } ) },
+                                ytrafo = function(Y.data){ trafo(Y.data, numeric_trafo = rank, block = data[,block.name] ) }
+  )
+  # if(to.print.friedman) { print(the.sym.test) }
+  
+  
+  if(to.post.hoc.if.signif)
+  {
+    if(pvalue(the.sym.test) < signif.P)
+    {
+      # the post hoc test
+      The.post.hoc.P.values <- pvalue(the.sym.test, method = "single-step")	# this is the post hoc of the friedman test
+      
+      
+      # plotting
+      if(to.plot.parallel & to.plot.boxplot)	par(mfrow = c(1,2)) # if we are plotting two plots, let's make sure we'll be able to see both
+      
+      if(to.plot.parallel)
+      {
+        X.names <- levels(data[, X.name])
+        X.for.plot <- seq_along(X.names)
+        plot.xlim <- c(.7 , length(X.for.plot)+.3)	# adding some spacing from both sides of the plot
+        
+        if(color.blocks.in.cor.plot)
+        {
+          blocks.col <- rainbow_hcl(length(levels(data[,block.name])))
+        } else {
+          blocks.col <- 1 # black
+        }
+        
+        data2 <- data
+        if(jitter.Y.in.cor.plot) {
+          data2[,Y.name] <- jitter(data2[,Y.name])
+          par.cor.plot.text <- "Parallel coordinates plot (with Jitter)"
+        } else {
+          par.cor.plot.text <- "Parallel coordinates plot"
+        }
+        
+        # adding a Parallel coordinates plot
+        matplot(as.matrix(reshape(data2,  idvar=X.name, timevar=block.name,
+                                  direction="wide")[,-1])  ,
+                type = "l",  lty = 1, axes = FALSE, ylab = Y.name,
+                xlim = plot.xlim,
+                col = blocks.col,
+                main = par.cor.plot.text)
+        axis(1, at = X.for.plot , labels = X.names) # plot X axis
+        axis(2) # plot Y axis
+        points(tapply(data[,Y.name], data[,X.name], median) ~ X.for.plot, col = "red",pch = 4, cex = 2, lwd = 5)
+      }
+      
+      if(to.plot.boxplot)
+      {
+        # first we create a function to create a new Y, by substracting different combinations of X levels from each other.
+        subtract.a.from.b <- function(a.b , the.data)
+        {
+          the.data[,a.b[2]] - the.data[,a.b[1]]
+        }
+        
+        temp.wide <- reshape(data,  idvar=X.name, timevar=block.name,
+                             direction="wide") 	#[,-1]
+        wide.data <- as.matrix(t(temp.wide[,-1]))
+        colnames(wide.data) <- temp.wide[,1]
+        
+        Y.b.minus.a.combos <- apply(with(data,combn(levels(data[,X.name]), 2)), 2, subtract.a.from.b, the.data =wide.data)
+        names.b.minus.a.combos <- apply(with(data,combn(levels(data[,X.name]), 2)), 2, function(a.b) {paste(a.b[2],a.b[1],sep=" - ")})
+        
+        the.ylim <- range(Y.b.minus.a.combos)
+        the.ylim[2] <- the.ylim[2] + max(sd(Y.b.minus.a.combos))	# adding some space for the labels
+        is.signif.color <- ifelse(The.post.hoc.P.values < .05 , "green", "grey")
+        
+        boxplot(Y.b.minus.a.combos,
+                names = names.b.minus.a.combos ,
+                col = is.signif.color,
+                main = "Boxplots (of the differences)",
+                ylim = the.ylim
+        )
+        legend("topright", legend = paste(names.b.minus.a.combos, rep(" ; PostHoc P.value:", number.of.X.levels),round(The.post.hoc.P.values,5)) , fill =  is.signif.color )
+        abline(h = 0, col = "blue")
+        
+      }
+      
+      list.to.return <- list(Friedman.Test = the.sym.test, PostHoc.Test = The.post.hoc.P.values)
+      if(to.print.friedman) {print(list.to.return)}
+      return(list.to.return)
+      
+    }	else {
+      print("The results where not significant, There is no need for a post hoc test")
+      return(the.sym.test)
+    }
+  }
+  
+  # Original credit (for linking online, to the package that performs the post hoc test) goes to "David Winsemius", see:
+  # http://tolstoy.newcastle.edu.au/R/e8/help/09/10/1416.html
+}
+
+friedman.test.with.post.hoc(value ~ X2 | X1, rt1)
+
+#------------------------------
+#### one way sample ####
+ow <- read.csv("../data/onewaySample.csv", header=T)
+View(ow)
+# 값들만 따로 뽑기
+ow <- ow[ , 2:6]
+View(ow)
+#벡터로 평균값들만 저장하기
+means <- c(mean(ow$score0), mean(ow$score1), mean(ow$score3),
+           mean(ow$score6))
+means
+
+install.packages("gplots")
+library(gplots)
+
+#점을 선으로 해주는 함수
+plotCI(x=means, type = "l", ylab="score", xlab="month",main="One way Test")
+# ~1 = 하나로 묶어준다는
+multimodel <- lm(cbind(ow$score0, ow$score1, ow$score3, ow$score6)~1)
+trials <- factor(c("score0","score1","score3","score6"), ordered=F)
+
+install.packages("car")
+library(car)
+model1<-Anova(multimodel, idata=data.frame(trials), idesign = ~trials, type = "III")
+
+summary(model1, multiVarFreq=F)
+
+library(tidyr)
+owlong <- gather(ow, key="ID", value ="score")
+View(owlong)
+
+owlong <-owlong[8:35, ]
+
+out <- aov(score~ID, data=owlong)
+shapiro.test(resid(out))
+
+summary(out)
+
+TukeyHSD(out)
+
+#### kaggle ####
+# https://www.kaggle.com/blastchar/telco-customer-churn?select=WA_Fn-UseC_-Telco-Customer-Churn.csv
+
+telco <- read.csv("../data/datasets_13996_18858_WA_Fn-UseC_-Telco-Customer-Churn.csv",header=T)
+View(telco)
+telco %>% select(PaymentMethod, TotalCharges) %>% group_by(PaymentMethod) %>% summarise(n = n(), mean = mean(TotalCharges, na.rm = T))
+
+moonBook::densityplot(TotalCharges ~ PaymentMethod, data = telco)
+
+# out = aov(TotalCharges ~ PaymentMethod, data = telco)
+# shapiro.test(resid(out))  # 샘플이 5000개를 넘어가면, 정규성 검사할 필요가 없다 # 중심극한정리의 증명에 의해
+
+with(telco, shapiro.test(TotalCharges[PaymentMethod == "Bank transfer (automatic)"])) # 하나씩 뽑아서하면 가능!
+with(telco, shapiro.test(TotalCharges[PaymentMethod == "Electronic check"]))
+with(telco, shapiro.test(TotalCharges[PaymentMethod == "Mailed check"]))
+with(telco, shapiro.test(TotalCharges[PaymentMethod == "Credit card (automatic)"]))
+# 모두 정규분포 X , p-value값이 의미가 없다!
+
+x = telco$TotalCharges[telco$PaymentMethod == "Bank transfer (automatic)"]
+x  # 개수가 충분하다
+
+x1 <- sample(x, 100, replace = F) #100개 샘플, 비복원추출
+shapiro.test(x1) # 정규분포 X
+
+x1 <- sample(x, 50, replace = F) #50개 샘플, 비복원추출
+shapiro.test(x1) # 정규분포 X , p-value값이 점점 커짐
+
+x1 <- sample(x, 30, replace = F) #20개 샘플, 비복원추출
+shapiro.test(x1) # 정규분포 O
+# 데이터를 줄였는데 오히려 정규분포가 됨
+
+# 앤더슨 달링 테스트
+nortest::ad.test(x)
+
+bartlett.test(TotalCharges ~ PaymentMethod, data = telco) # 등분산 X
+
+# welch's anova
+oneway.test(TotalCharges ~ PaymentMethod, data = telco, var.equal = F) # var.equal = F -> 등분산이 아니다
+
+library(nparcomp)
+result = mctp(TotalCharges ~ PaymentMethod, data = telco)
+summary(result) # 계좌이체와 신용카드는 차이가 없다
+
+# kruscal test
+library(pgirmess)
+kruskal.test(TotalCharges ~ PaymentMethod, data = telco)
+kruskalmc(telco$TotalCharges, telco$PaymentMethod) # 사후검정
+
+# --------------------------------------------------------------------------------------------------------
+### two way repeated measured anova
+# 약의 종류에 따른 성능을 기간별로 모은 데이터
+acne <- read.csv('../data/10_rmanova.csv', header = T)
+acne # 시간에 따른 데이터, 그룹에 따른 데이터
+
+# wide형이므로 long형으로 바꿔줌
+ac1 <- reshape(acne, direction = 'long', varying = 3:6, sep = '') # 자동으로 바꿔줌
+ac1
+library(reshape2)
+ac2 <- reshape2::melt(acne, id = c('group', 'id'),
+                      variable.name = 'time', value.name = 'month',
+                      measure.vars = c('month0', 'month1', 'month3', 'month6')) # 원하는대로 설정하여 바꿈
+ac2
+
+?interaction.plot
+
+str(ac1)
+class(ac1$group)
+# 전부다 factor로 바꾸면 안됨, month는 실제값이므로 가만히놔둔당
+ac1$group <- factor(ac1$group)
+ac1$id <- factor(ac1$id)
+ac1$time <- factor(ac1$time)
+
+str(ac1)
+
+interaction.plot(ac1$time, ac1$group, ac1$month) # 몇 개월부터 차이가 나는지 대충 보임
+
+out <- aov(month ~ group*time, data = ac1) # 그룹과 시간을 같이 묶음
+summary(out) # *이 많으면 강한 차이 (0 -> ‘***’,  0.001 -> ‘**’, 0.01 -> ‘*’,  0.05 -> ‘.’ 0.1 -> ‘ ’,  1)
+
+ac_0 <- ac1[ac1$time == '0', ]
+ac_1 <- ac1[ac1$time == '1', ]
+ac_3 <- ac1[ac1$time == '3', ]
+ac_6 <- ac1[ac1$time == '6', ]
+
+ac_0
+ac_1
+#1. 3. 6 차이가 있다.
+t.test(month~group, data=ac_0)
+t.test(month~group, data=ac_1)
+t.test(month~group, data=ac_3)
+t.test(month~group, data=ac_6)
+# 4C2   4! / (4-2)!2!
+0.05/6
+# 0.008 보다 작아야함 
+# t.test 1개월은 차이가 없다 

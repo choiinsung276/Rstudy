@@ -1,0 +1,124 @@
+#### 키보드 입력 ####
+#scan() : 벡터입력
+#edit() : 데이터프레임 입력
+# 여러 입력값들이 벡터로 들어가고 최종적으로 엔터 누르면 끝
+a <- scan()
+a
+# 문자를 벡터로 입력 받기
+b<- scan(what=character())
+b
+# edit 함수를 이용하여 데이터프레임 직접 입력하기
+df <- data.frame()
+df <- edit(df)
+df
+
+#### 파일 입력 ####
+
+# read.csv()
+# read.table()
+# read.xlsx() #엑셀
+# tsv : delim , 
+
+student <- read.table("../data/student.txt")
+student
+# student2는 : 세미콜론으로 구분되있고
+# student3 는 결측지대신에 + , - 특수문자들로 구성되있음
+
+student1 <- read.table("../data/student1.txt", header=T)
+student1
+# sep 인자를 활용해서 : 구분자 빼낸다
+student2 <- read.table(file=file.choose(), header = T, sep=";")
+student2
+# na.strins = 인자를 활용하여 결측치를 -로 표시해보겠다.
+student3 <- read.table(file.choose(), header = T, sep = "",na.strings = "-")
+student3                       
+# 다양한 결측치들은 c() 로 묶어서 해야한다.
+student3 <- read.table(file.choose(), header = T, sep = "",
+                       na.strings =c("-","+","&"))
+student3
+
+# read.xlsx()
+install.packages("xlsx")
+library(rJava)
+library(xlsx)
+studentx <- read.xlsx(file.choose(), sheetIndex = 1, encoding="UTF-8")
+studentx
+#### 웹 문서 읽기 ####
+install.packages("httr")
+install.packages("XML")
+library(httr)
+library(XML)
+url <-"https://ssti.org/blog/useful-stats-capita-personal-income-state-2010-2015"
+
+get_url <- GET(url)
+get_url
+#테이블에 접근하겠다.
+# 테이블자체를 지정하면 안되고 좀더 큰 테그에 접근해야한다.
+# readHTMLTable 은 테이블을 포함하고있는 더큰 테그에 접근해야함.
+readHTMLTable(get_url$content)
+get_url$content #어셈블리형식으로 되있음
+#rawToChar 를 이용해햐한다.어셈블리언어 해결하러면
+html_content <- readHTMLTable(rawToChar(get_url$content))
+html_content
+class(html_content)
+str(html_content)
+
+df <- as.data.frame(html_content)
+df 
+#### 화면 출력 #### 
+# 변수명 
+#() 이용
+(df <- as.data.frame(html_content))
+#cat() 연결 연결 해서 출력할수있음
+#print()
+
+x <- 10
+y <- 20
+z <- x+y
+z #변수명
+(z <- x+y) # () 이용출력 print가 생략된
+print(z) #print이용
+cat("x+y 결과는", as.character(z), "입니다")
+
+studentx <- read.xlsx(file.choose(), sheetIndex = "emp2", encoding="UTF-8")
+studentx
+class(studentx)
+
+write.table(studentx, "../data/stud1.txt")
+# row.names = F 인자 이용하여 로우당 첫번째 없어짐
+write.table(studentx, "../data/stud2.txt", row.names =  F)
+# "" 쌍따움표 없애기. quote = F
+write.table(studentx, "../data/stud3.txt",row.names = F,quote = F)
+# csv 로 저장 콤마로 저장됨 
+write.csv(studentx, "../data/stud4.csv",row.names = F,quote = F)
+
+library(rJava)
+library(xlsx)
+write.xlsx(studentx, "../data/stud5.xlsx")
+
+#### rda 파일 ####
+# save()
+# load()
+
+save(studentx, file="../data/stud6.rda")
+#변수 메모리 자체를 삭제
+rm(studentx)
+studentx
+load("../data/stud6.rda")
+studentx
+
+#### sink() ####
+data()
+?data
+
+data(iris)
+head(iris)
+tail(iris)
+str(iris)
+#내가하는 작업을 iris.txt에 저장하는것
+#출력화면을 iris.txt에 저장
+sink("../data/iris.txt")
+head(iris)
+tail(iris)
+str(iris)
+sink() #이거로 닫아야됨

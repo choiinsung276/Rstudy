@@ -1,0 +1,85 @@
+#### 기술통계량 ####
+# min(vec), max(vec)
+# range(vec) : 벡터를 대상으로 범위값을 구하는 함수
+# mean(vec), median(vec)
+# sum(vec)
+# order(vec) 정렬
+# rank(vec) 순위, sd(vec) 표준편차
+# summary(vec) 요약 , table(vec) 테이블 
+# quantile(vec), table(vec)
+# sample(x,y) : x 범위에서 y만큼 샘플데이터를 생성하는함수
+
+#table()
+aws = read.delim("../data/AWS_sample.txt",sep="#")
+str(aws)
+
+table(aws$AWS_ID)
+table(aws$AWS_ID, aws$X.)
+table(aws[, c("AWS_ID","X.")])
+aws[2500:3100,"X."] = "modified"
+table(aws$AWS_ID, aws$X.)
+
+prop.table(table(aws$AWS_ID))
+prop.table(table(aws$AWS_ID)) *100
+
+paste0(prop.table((aws$AWS_ID))*100,'%')
+
+#기술 통계 함수의 모듈화
+test<-read.csv("../data/test.csv",header=T)
+head(test)
+
+data_proc <-function(df){
+  # 각 컬럼단위로 빈도와 최대값/최소값 계산
+  #컬럼의 개수만큼
+  for(idx in 1:length(df)){
+    cat(idx, "번째 컬럼의 빈도 분석 결과")
+    print(table(df[idx]))
+    cat("\n")
+  }
+  for(idx in 1: length(df)){
+    f<-table(df[idx])
+    cat(idx, "번째 컬럼의 최대값/최소값 결과")
+    cat("max = ", max(f),",",min(f),"\n")
+  }
+}
+
+data_proc(test)
+
+#### plyr, dplyr ####
+install.packages("plyr")
+library(plyr)
+
+# 데이터 병합
+x <- data.frame(id = c(1,2,3,4,5,6), height =c(160,170,173,162,165,170))
+y <- data.frame(id =c(5,4,1,3,2,7),weight=c(55,73,60,57,80,91))
+
+xy <-join(x,y,by="id",type="left")
+xy
+
+xy <- join(x,y,by="id",type="right")
+xy
+
+#다중 키일 경우
+x <- data.frame(key1 = c(1,1,2,2,3),
+                key2 = c('a','b','c','d','e'),
+                val = c(10,20,30,40,50))
+y <- data.frame(key1 =c(3,2,2,1,1),key2=c('e','d','c','b','a'),
+                val = c(500,400,300,200,100))
+
+xy<-join(x,y,by=c("key1","key2"))
+xy
+
+# 기술 통계량 : ddply(), tapply()
+# tapply : 집단 변수를 대상으로 한번에 하나의 통계치를 구할 때 사용용
+# ddply : 한번에 여러개의 통계치를 구할 때 사용
+head(iris)
+unique(iris$Species)
+class(iris$Species)
+
+tapply(iris$Sepal.Length, iris$Species, mean)
+tapply(iris$Sepal.Length, iris$Species, sd)
+
+ddply(iris, .(Species), summarise, avg=mean(Sepal.Length),
+      std = sd(Sepal.Length),
+      max = max(Sepal.Length),
+      min = min(Sepal.Length))

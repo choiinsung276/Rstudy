@@ -1,0 +1,142 @@
+#### 난수 발생 함수 ####
+# numif() 난수발생 함수
+?runif
+x<-runif(1) #0~1 까
+x
+# x 가 0보다 크면 절대값(abs)으로 값 출력
+if (x>0){
+  print(abs(x))
+}
+# 0.5보다 작으면 1-x 출력 그렇지 않으면 x출력
+if(x<0.5){
+  print(1-x)
+}else{
+  print(x)
+}
+# ifelse함수를 써서 간단히
+ifelse(x<0.5, 1-x, x)
+
+#다중 조건
+avg <- scan()
+
+if(avg >= 90){
+  print("당신의 학점은 a입니다")
+} else if(avg>=80){
+  print("당신의 학점은 b입니다.")
+}else if(avg>=70){
+  print("당신의 학점은 c입니다.")
+}else if(avg>=60){
+  print("당신의 학점은 d입니다.")
+}else{
+  print("F")
+}
+# switch(), which(), any(), all()
+# switch( 비교문, 실행문1, 실행문2, 실행문3)
+a <- "중1"
+switch(a, "중1"=print("14살"), "중2"=print("15살"))
+switch(a, "중1"="14살", "중2"="15살")
+
+b <- 3
+switch(b, "14살", "15살", "16살")
+empname <- scan(what = "")
+switch(empname, hong = 250, lee=350, kim=200, kang=400)
+# 연산의 결과를 switch 문에 넣어서 할수있다.
+# switch에서는 문자밖에안됨
+avg<-avg%/%10
+avg
+result<-switch(as.character(avg),"10"="a"
+       ,"9"="b","8"="b","7"="c","6"="d",
+       "f")
+cat("당신의 학접은:", result,"입니다")
+
+#which()
+x <- c(2:10)
+x
+#인덱스의 위치를 알려준다.
+which(x==3)
+#인덱스의 위치를 x[] 에 넣으면 바로 값나옴
+x[which(x==3)]
+
+m <- matrix(1:12, 3, 4)
+m
+# 매트릭스에서 3으로나눈나머지 %% 
+which(m%%3 ==0) #인덱스를 안쓰게 F로 되있음
+# 행열의 위치를 알고싶다 하면 arr.ind = T
+which(m%%3 ==0, arr.ind=T)
+
+no <- c(1:5)
+name <- c("홍길동","유비","관유","장비","조자룡")
+score <- c(85, 78, 89, 90, 74)
+exam <- data.frame(학번 = no, 이름=name, 성적=score)
+exam
+
+#이름이 장비인 사람 검색
+#exam의 이름열 = exam$이름 , which 의 결과는 행이다.
+which(exam$이름=="장비")
+exam[4, ]
+
+data(trees)
+head(trees)
+tail(trees)
+
+#height 컬럼이 70미만인 행의 위치를 검색하고 행을 출력
+which(trees$Height<70)
+trees[which(trees$Height<70), ]
+#최대 최소의 특정열의 값을 같는 행을 찾아낼수있다.
+which.max(trees$Height)
+which.min(trees$Height)
+
+#any(), all()
+x<- runif(5)
+x
+
+# any = 0.8이상이 있는가? 하나라도
+any(x>0.8)
+
+# x 의 값이 모두 0.9이하 인가?
+all(x<=0.9)
+
+#### 반복문 ####
+#for 
+sum <- 0
+for(i in seq(1,10,by=1)){
+  sum <-sum +i
+}
+sum
+sum <- 0
+for(i in seq(1,10,by=1)) sum <- sum+i
+sum
+#next 는 실행하지않고 넘어가는거
+for(i in seq(1,10,by=1)){
+  if(i%%2==0){
+    print(i)
+  }
+}
+
+#### 함수 ####
+test1<-function(){
+  x<-10
+  y<-10
+  return (x*y)
+}
+
+# 가변길이 :...
+test3<-function(...){
+  #print(list(...))
+  args<-list(...)
+  for(i in args){
+    print(i)
+  }
+  }
+test3(10)
+test3(10,20)
+test3(10,20,30)
+test3('3','홍길동',7)
+
+test4 <- function(a,b,...){
+  print(a)
+  print(b)
+  print('--------')
+  test3(...)
+}
+test4(10,20,30,40)

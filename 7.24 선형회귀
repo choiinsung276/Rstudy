@@ -1,0 +1,204 @@
+str(women)
+women
+
+plot(weight~height, data = women)
+
+#직선 lm() = 기울기와 절편
+fit <-lm(weight~height, data = women)
+abline(fit, col="blue")
+
+summary(fit)
+
+fit2 <- lm(weight ~ height + I(height^2),data = women)
+summary(fit2)
+lines(women$height, fitted(fit2), col="red")
+
+
+
+#Estimate, std.error , tvalue, pr
+#추정된계수/ 표준오차/t값/ 피값
+#p값으로 alpha 0.05 하에 귀무가설 기가
+# 이는 곳 추정된 회귀식의 절편은 유의함 의미
+# heigh 의 계수는 p value보고 유의함 판단
+# esidual standard error: 1.525 on 13 degrees of freedom
+# 잔차의 표준오차 이고 자유도 13에서 관측값에서 -1을한 값이 자유도
+# Multiple R-squared:  0.991,	Adjusted R-squared:  0.9903
+# 1 에 가까울수록 설명력이 높다.
+
+#### kaggle house ####
+# https://www.kaggle.com/harlfoxem/housesalesprediction
+house <- read.csv("../data/kc_house_data.csv", header = T)
+head(house)
+str(house)
+# attach 변수 house$ 안쓰기위한 함수
+attach(house)
+
+x = cbind(sqft_living, bathrooms, sqft_lot, floors)
+cor(x)
+# 독립변수와 종속변수와의 관계 
+#sqft_living 거실의 크기 상관관계가 가장높다
+cor(x, price)
+
+reg1 <- lm(price ~ sqft_living, data= house)
+summary(reg1)
+
+
+reg2 <- lm(price ~ sqft_living+floors, data= house)
+summary(reg2)
+
+# pvalue 는 좋은데 floors가 음수로 바뀜
+reg2_1 <- lm(price ~ sqft_living+floors+sqft_living*floors, data= house)
+summary(reg2_1)
+
+library(car)
+vif(reg2_1)
+
+x=cbind(floors, sqft_above, sqft_basement)
+cor(x)
+
+cor(x, price)
+
+reg3 <- lm(price ~ floors+ bedrooms, data= house)
+summary(reg3)
+
+vif(reg3)
+
+reg4 <- lm(price ~ floors+ bedrooms+waterfront, data= house)
+summary(reg4)
+
+vif(reg4)
+
+reg6 <- lm(price ~ floors+ bedrooms+waterfront+floors*waterfront, data= house)
+summary(reg6)
+vif(reg6) #계속 조합을 해보나 vif 결과가 높가 나옴
+
+#-----------------------------------------------
+# 고려해야할것
+# 정규성(잔차의정규성), 독립성, 선형성, 등분산성
+
+fit <- lm(weight ~ height, data = women)
+
+
+plot(fit)
+# 처음나오는 그래프 잔차도, nomalqq(데이터 정규성)
+# scale-location (등분산성)
+# cook's distance 경계선 밖으로 나가는게 이상치
+# cooks 보통 다중회귀
+# 한번에 보기위해 par()
+par(mfrow = c(2,2))
+plot(fit)
+
+#-----------------------------
+mydata <- read.csv("../data/regression.csv")
+View(mydata)
+str(mydata)
+# 종속변수 : 합계 출산율
+
+y = cbind(mydata$birth_rate)
+x = cbind(mydata$kindergarten)
+
+fit <- lm(y ~ x , data=mydata)
+summary(fit)
+
+plot(fit)
+# 잔차, 등분 , qq 그래프를봤을때 자료는 문제없음
+
+fit2 <- lm(log(y) ~log(x), data = mydata)
+summary(fit2)
+plot(fit2)
+# log하기전에 정규분포아님
+shapiro.test(resid(fit))
+# log 하고나면 정규분포가됨
+shapiro.test(resid(fit2))
+
+# 시, 군, 구(dummy)
+#==============================================
+#https://m.blog.naver.com/PostView.nhn?blogId=ilustion&logNo=220287717215&proxyReferer=https:%2F%2Fwww.google.com%2F
+
+class(state.x77)
+states <- as.data.frame(state.x77[,c("Murder","Population",
+                                     "Illiteracy","Income","Frost")])
+states
+# . 은 모두
+fit <- lm(Murder~ ., data=states)
+summary(fit)
+
+vif(fit)
+
+sqrt(vif(fit))
+
+# 이상치
+#   1) 이상치(outlier) : 표준잔차 2배이상 ~ -2배이상
+#   2) 큰 지레점(High leverage points) 
+#   - 절편을 포함한 인수들의 숫자\n 의 값이 2~3배 이상 되는 관측지
+#   ex ) 데이터개수 / 4개인자 +1(절편)  0.1 
+#   3) 영향 관측지(Influential Observation, Cook's D)
+#       독립변수의수 / 샘플수 - 독립변수의 수 -1 의 값보다 큰값
+# 4개변수 / 50- 4 - 1 = 대략0.1
+
+influencePlot(fit, id=list(method = "identify"))
+# y축 2랑 -2 아래 위로 이상치가 있다라고 생각 
+# 표준잔차 2배이상 2배 이하 
+
+#x 축이 큰지레점
+# 0.1 의 2~3배 되는 0.2 0.3 
+
+#원의 크기는 영향관측지
+
+par(mfrow = c(1,1))
+influencePlot(fit, id=list(method = "identify"))
+#포인트 누르고 finish 누르면 나라이름나옴
+
+par(mfrow = c(2,2))
+plot(fit)
+
+shapiro.test(resid(fit))
+#정규분포는 맞는데 아니였다면 교정을 해야함
+
+#### 회귀모형의 교정 ####
+#정규분포의 교정
+# -2, -1, -0.5, 0, 0.5, 1, 2
+# car:: powerTransform() 을 이용한 변수의 변환
+# 정규화시킬수 있는 가장 가능성있는 지수 lambda를 얻을수있다.
+summary(powerTransform(states$Murder))
+# 이데이터는  Est Power Rounded Pwr Wald Lwr Bnd
+# 0.6055 라고 추정해줌
+
+#선형성의 교정
+
+boxTidwell(Murder~Population +Illiteracy, data=states)
+# MLE of lambda , 0.86, 1.3 제곱하라는것 
+
+# 등분산성의 교정
+ncvTest(fit)
+spreadLevelPlot(fit)
+
+# -----------------------------------------------------------------
+#### 모형 선택 : Backward Stepwise Regression, Forkward Stepwise Regression
+# AIC(Akike's Information Criterion) 
+# https://m.blog.naver.com/ilustion/220287740191
+fit1 <- lm(Murder ~ . , data = states)
+summary(fit1)
+
+fit2 <- lm(Murder ~ Population + Illiteracy , data = states)
+summary(fit2)
+
+AIC(fit1, fit2)
+
+# Backward
+full.model <- lm(Murder ~ . , data = states)
+reduced.model <- step(full.model, direction = "backward")
+
+summary(reduced.model)
+
+min.model <- lm(Murder ~1, data=states)
+fwd.model <- step(min.model, direction = "forward",
+                  scope=(Murder~Population +Illiteracy + Income
+                         + Frost))
+
+install.packages("leaps")
+library(leaps)
+
+leaps <- regsubsets(Murder~Population + Illiteracy +Income + Frost, data = states)
+# r2을 보완한 
+plot(leaps, scale="adjr2")

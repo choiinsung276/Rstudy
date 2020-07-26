@@ -1,0 +1,74 @@
+# 종속, 독립 변수 모두 명목, 서열인 경우의 분석
+# 집단간의 비율 검정
+# 1.Chi-Square Test (데이터 수가 충분)
+# 2.Fisher's exact test (데이터수가 부족할때)
+# 3.Cochran-armitage trend test : 명목 변수가 서열번수일때 (trend가 있을때)
+# 일원 카이제곱(차이검정) , 이원 카이제곱(관계 검정)
+
+head(mtcars)
+
+# 자동차의 실린더 수와 변속기어의 관계
+
+table(mtcars$cyl, mtcars$am)
+# 0이면 자동 1이면 매뉴얼로 
+mtcars$tm <- ifelse(mtcars$am ==0, "automatic","manual")
+result <- table(mtcars$cyl, mtcars$tm)
+result
+addmargins(result)
+#기대도수 계산
+chisq.test(result)
+fisher.test(result)
+
+#### Cochran-Amitage Trend Test ####
+# https://m.blog.naver.com/PostView.nhn?blogId=ilustion&logNo=220275211710&proxyReferer=https:%2F%2Fwww.google.com%2F
+#두 개의 범주형 사이의 독립성 검정은 카이제곱 혹은 Fisher의 정확성 검정을 사용한다.
+#하지만 한 변수가 순위가 있는 ordinal변수인 경우 
+#trend를 보려면 Cochran-Armitage Trend test를 시행한다.
+library(moonBook)
+str(acs)
+#흡연자 , 비흡연자, 과거 흡연자와 고혈압 유무가 서로 
+#연관이 있을까?
+View(acs)
+#table(A,B)  A가 행 B가 열
+table(acs$HBP, acs$smoking)
+#열순서 바꾸기
+acs$smoking <- factor(acs$smoking, levels =c('Never',"Ex-smoker","Smoker"))
+result <- table(acs$HBP, acs$smoking)
+result
+
+?prop.trend.test()
+#x : 사건의 발생회수= 고혈압이 발생한 사람의 숫자
+# n : 시도한 횟수
+# x = c(...) = result[2, ]
+result[2,]
+
+# Number of trials = n = colSums(result)
+# 병있는사람 없는사람 구분없이 합계로
+colSums(result)
+
+prop.trend.test(result[2,],colSums(result))
+# 기술 통계량 
+mytable(smoking~age, data=acs)
+
+#모자이크 그래프
+mosaicplot(result)
+mosaicplot(result, color=c("tan1","firebrick2"))
+colors()
+demo("colors")
+mosaicplot(result, color = c("tan1","firebrick2"))
+t(result)
+mosaicplot(t(result), color = c("tan1","firebrick2"),
+           ylab="Hypertension",
+           xlab = "Smoking")
+#----------------------
+mydata <-read.csv("../data/anova_two_way.csv")
+mydata
+
+# 시군구에 따라 다자녀 지원 조례 채텍 여부가 연관이 있는가?
+
+result <- table(mydata$ad_layer, mydata$multichild)
+result
+
+chisq.test(result)
+#피셔의 검정
+fisher.test(result)

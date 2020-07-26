@@ -1,0 +1,65 @@
+install.packages("UsingR")
+library(UsingR)
+
+head(galton)
+str(galton)
+
+plot(child~parent, data=galton)
+
+cor.test(galton$child, galton$parent)
+
+out <- lm(child ~ paraent, data=galton)
+summary(out)
+
+abline(out, col="red")
+
+plot(jitter(child, 5) ~jitter(parent, 5), data=galton)
+
+install.packages("SwissAir")
+library(SwissAir)
+View(AirQual)
+str(AirQual)
+
+Ox <- AirQual[ , c("ad.O3", "lu.O3", "sz.O3")] + AirQual[ , c("ad.NOx", "lu.NOx", "sz.NOx")] -
+  AirQual[ , c("ad.NO", "lu.NO", "sz.NO")]
+
+names(Ox) <- c("ad","lu","sz")
+
+plot(lu ~sz, data= Ox)
+
+install.packages("hexbin")
+library(hexbin)
+hexbin(Ox$lu, Ox$sz, xbins = 50)
+# 산포도 종류중 하나 
+smoothScatter(Ox$lu, Ox$sz)
+
+#산포도 종류중 하나
+install.packages("IDPmisc")
+library(IDPmisc)
+#색상이 섞여서 나오는데 크기별로 나옴
+iplot(Ox$lu, Ox$sz)
+
+#--------------------------
+mydata <- read.csv("../data/cor.csv")
+View(mydata)
+
+# 산포도 
+#인구 성장률과 노인비율
+plot(mydata$pop_growth, mydata$elederly_rate, main = 'ScatterPlot')
+par("mar")
+par(mar=c(10,1,1,1))
+
+# 상관 계수 
+#모수적
+cor(mydata$pop_growth, mydata$elderly_rate, method = "pearson")
+#비모수
+cor(mydata$pop_growth, mydata$elderly_rate, method = "spearman")
+#비모수
+cor(mydata$pop_growth, mydata$elderly_rate, method = "kendall")
+
+#cultural_center : 인구 10만명당 문화시설 수   
+
+x <- cbind(mydata$pop_growth, mydata$birth_rate, mydata$elderly_rate,
+      mydata$finance, mydata$cultural_center)
+#옵션없으면 피어슨
+cor(x)
